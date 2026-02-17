@@ -150,7 +150,7 @@
     .reveal pre code {
       font-size: 0.75em;
       line-height: 1.4;
-      max-height: 420px;
+      max-height: 600px;
       border-radius: 8px;
       padding: 12px !important;
     }
@@ -161,7 +161,10 @@
       font-size: 3em;
       margin-bottom: 10px;
     }
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
+    .two-col > div:not(.card) { display: flex; flex-direction: column; }
+    .two-col > div:not(.card) > pre { flex: 1; margin: 0; }
+    .two-col > div:not(.card) > .card:last-child { flex: 1; }
 
     .small { font-size: 0.82em; }
     .tiny { font-size: 0.65em; color: #8b949e; }
@@ -239,10 +242,9 @@
     body.light-mode .demo-step .step-num { color: #fff; }
 
     /* Theme toggle button */
-    .theme-toggle {
+    .theme-toggle, .fullscreen-toggle {
       position: fixed;
       top: 14px;
-      right: 14px;
       z-index: 100;
       background: rgba(128,128,128,0.25);
       border: 1px solid rgba(128,128,128,0.4);
@@ -253,10 +255,51 @@
       line-height: 1;
       transition: background 0.2s;
     }
-    .theme-toggle:hover { background: rgba(128,128,128,0.45); }
+    .theme-toggle { right: 14px; }
+    .fullscreen-toggle { right: 70px; }
+    .theme-toggle:hover, .fullscreen-toggle:hover { background: rgba(128,128,128,0.45); }
+
+    /* Start overlay */
+    .start-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(13,17,23,0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      color: #c9d1d9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+    .start-overlay h2 { color: var(--accent); margin: 0; font-size: 2em; }
+    .start-overlay p { margin: 0; font-size: 1.1em; color: #8b949e; }
+    .start-btn {
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 48px;
+      font-size: 1.3em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .start-btn:hover { transform: scale(1.05); box-shadow: 0 0 24px rgba(121,184,255,0.4); }
+    .start-overlay .skip { color: #8b949e; font-size: 0.85em; cursor: pointer; text-decoration: underline; border: none; background: none; }
   </style>
 </head>
 <body>
+  <!-- Start Presentation Overlay -->
+  <div class="start-overlay" id="startOverlay">
+    <h2>Customizations for Your Team, Tools, and Techniques</h2>
+    <p>For the best experience, present in full screen</p>
+    <button class="start-btn" onclick="startFullscreen()">&#9654; Start Full Screen</button>
+    <button class="skip" onclick="dismissOverlay()">or continue without full screen</button>
+  </div>
+
+  <button class="fullscreen-toggle" onclick="toggleFullscreen()" title="Toggle full screen">&#x26F6;</button>
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">&#9728;&#65039;</button>
   <div class="reveal">
     <div class="slides">
@@ -290,18 +333,18 @@
             <span class="tiny">Interactive &mdash; role-based personas with tooling</span>
           </div>
         </div>
-        <div style="display:flex; justify-content:center; gap:16px; margin-top:16px; font-size:1em;">
-          <div class="card red-border" style="flex:0 1 33%; padding:18px 20px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top:16px; font-size:1em;">
+          <div class="card red-border" style="padding:18px 20px;">
             <strong style="color:var(--accent5)">Skills</strong> <span class="badge badge-pink">New</span><br>
             "Portable capabilities loaded by task"<br>
             <span class="tiny">Auto-matched &mdash; reusable capabilities</span>
           </div>
-          <div class="card orange-border" style="flex:0 1 33%; padding:18px 20px;">
+          <div class="card orange-border" style="padding:18px 20px;">
             <strong style="color:var(--accent4)">Hooks</strong> <span class="badge badge-gold">New</span><br>
             "Auto-run checks after agent edits"<br>
             <span class="tiny">Automated &mdash; lint, format, test on every change</span>
           </div>
-          <div class="card mcp-border" style="flex:0 1 33%; padding:18px 20px;">
+          <div class="card mcp-border" style="padding:18px 20px;">
             <strong style="color:var(--accent6)">MCP Servers</strong><br>
             "Connect external tools and data sources"<br>
             <span class="tiny">Extensible &mdash; databases, APIs, and custom tooling</span>
@@ -376,56 +419,49 @@
       <section>
         <h2>Custom Instructions</h2>
         <p class="subtitle">Always-on context &mdash; global or scoped to specific files</p>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start;">
-          <div style="display:flex; flex-direction:column; gap:10px;">
-            <div class="card blue-border" style="padding:10px 14px;">
-              <h3 style="margin-bottom:4px;">&#128218; Global Instructions</h3>
-              <p style="margin:0;"><code>copilot-instructions.md</code> &mdash; injected into <strong>every</strong> chat request.</p>
-              <ul style="margin:4px 0;">
-                <li>Tech stack, conventions, architecture decisions</li>
-                <li>Applied to chat and agent mode (not inline completions)</li>
-                <li>Keep it focused &mdash; too much noise reduces quality</li>
-              </ul>
-            </div>
-            <pre style="margin:0;"><code class="language-markdown" style="font-size:0.7em;">---
+        <div style="display:grid; grid-template-columns:1fr 1fr; grid-template-rows:auto auto; gap:8px; align-items:stretch; font-size:0.85em;">
+          <div class="card blue-border" style="padding:8px 12px; margin:0;">
+            <h3 style="margin-bottom:4px;">&#128218; Global Instructions</h3>
+            <p style="margin:0;"><code>copilot-instructions.md</code> &mdash; injected into <strong>every</strong> chat request.</p>
+            <ul style="margin:4px 0;">
+              <li>Tech stack, conventions, architecture decisions</li>
+              <li>Applied to chat and agent mode (not inline completions)</li>
+              <li>Keep it focused &mdash; too much noise reduces quality</li>
+            </ul>
+          </div>
+          <div class="card purple-border" style="padding:8px 12px; margin:0;">
+            <h3 style="margin-bottom:4px;">&#127919; File-Scoped via <code>applyTo</code></h3>
+            <p style="margin:0;">Glob patterns match files relative to workspace root:</p>
+            <ul style="margin:4px 0;">
+              <li><code>**/*.test.ts</code> &mdash; all test files</li>
+              <li><code>src/api/**</code> &mdash; entire API layer</li>
+            </ul>
+            <p style="margin:0;">Best used to differentiate frontend vs. backend rules, or apply language and framework-specific patterns.</p>
+          </div>
+          <div>
+            <pre style="margin:0; height:100%;"><code class="language-markdown">---
 applyTo: "src/components/**/*.tsx"
 ---
+
 # React Component Guidelines
+
 - Use functional components only
-- Props interface named `{Component}Props`
+- Props interface named {Component}Props
 - Wrap async data in Suspense
 
 # Accessibility
+
 - All interactive elements need aria labels
 - Use semantic HTML elements</code></pre>
           </div>
-          <div style="display:flex; flex-direction:column; gap:8px; font-size:0.9em;">
-            <div class="card purple-border" style="padding:8px 12px;">
-              <h3 style="margin-bottom:4px;">&#127919; File-Scoped via <code>applyTo</code></h3>
-              <p style="margin:0;">Glob patterns match files relative to workspace root:</p>
-              <ul style="margin:4px 0;">
-                <li><code>**/*.test.ts</code> &mdash; all test files</li>
-                <li><code>src/api/**</code> &mdash; entire API layer</li>
-              </ul>
-              <p style="margin:0;">No <code>applyTo</code> = <strong>not auto-applied</strong> (can still add manually).</p>
-            </div>
-            <div class="card orange-border" style="padding:8px 12px;">
-              <h3 style="margin-bottom:4px;">&#128736;&#65039; When to Use Scoped Instructions</h3>
-              <ul style="margin:2px 0;">
-                <li>Different rules for frontend vs. backend</li>
-                <li>Language-specific conventions in a monorepo</li>
-                <li>Framework-specific patterns (React, Django, etc.)</li>
-              </ul>
-            </div>
-            <div class="card green-border" style="padding:8px 12px;">
-              <h3 style="margin-bottom:4px;">&#9989; Best Practices</h3>
-              <ul style="margin:2px 0;">
-                <li>Be specific: <em>"use Vitest"</em> not <em>"use a testing framework"</em></li>
-                <li>Include reasoning: <em>"Use date-fns &mdash; moment.js is deprecated"</em></li>
-                <li>Show code examples over abstract rules</li>
-                <li>Skip rules that linters/formatters already enforce</li>
-              </ul>
-            </div>
+          <div class="card green-border" style="padding:8px 12px; margin:0;">
+            <h3 style="margin-bottom:4px;">&#9989; Best Practices</h3>
+            <ul style="margin:2px 0;">
+              <li>Be specific: <em>"use Vitest"</em> not <em>"use a testing framework"</em></li>
+              <li>Include reasoning: <em>"Use date-fns &mdash; moment.js is deprecated"</em></li>
+              <li>Show code examples over abstract rules</li>
+              <li>Skip rules that linters/formatters already enforce</li>
+            </ul>
           </div>
         </div>
       </section>
@@ -456,7 +492,7 @@ copilot-instructions.md.</code></pre>
           </div>
           <div>
             <div class="card green-border" style="margin-bottom:12px;">
-              <h3>&#128640; Front Matter</h3>
+              <h3>&#128640; Meta Data</h3>
               <ul>
                 <li><code>mode</code>: <code>ask</code>, <code>agent</code>, or <code>edit</code></li>
                 <li><code>tools</code>: which tools the prompt can use</li>
@@ -464,13 +500,9 @@ copilot-instructions.md.</code></pre>
                 <li><code>model</code>: override the language model</li>
               </ul>
             </div>
-            <div class="card blue-border" style="margin-bottom:12px;">
+            <div class="card blue-border">
               <h3>&#128172; How to Invoke</h3>
               <p>Type <code>/</code> in chat to see available prompts, then add your own context after the command.</p>
-            </div>
-            <div class="card purple-border">
-              <h3>&#128196; Variables</h3>
-              <p><code>${selection}</code> &bull; <code>${file}</code> &bull; <code>${input:name}</code></p>
             </div>
           </div>
         </div>
@@ -479,7 +511,7 @@ copilot-instructions.md.</code></pre>
       <!-- SLIDE 9: Custom Agents -->
       <section>
         <h2>Custom Agents</h2>
-        <p class="subtitle">Role-based AI personas selected from the agents dropdown</p>
+        <p class="subtitle">Role-based personas</p>
         <div class="two-col">
           <div>
             <pre><code class="language-markdown">---
@@ -513,10 +545,6 @@ You are a senior engineer doing code review.
                 <li>File name becomes the agent identifier</li>
               </ul>
             </div>
-            <div class="card orange-border" style="margin-bottom:12px;">
-              <h3>&#128161; Agent Ideas</h3>
-              <p style="line-height:1.8;"><strong>reviewer</strong> &bull; <strong>architect</strong> &bull; <strong>docs-writer</strong> &bull; <strong>planner</strong> &bull; <strong>security</strong></p>
-            </div>
             <div class="card blue-border">
               <h3>&#128260; How to Use</h3>
               <p>Select from the <strong>agents dropdown</strong> in Chat. The agent's instructions, tools, and handoffs apply to your conversation.</p>
@@ -528,10 +556,10 @@ You are a senior engineer doing code review.
       <!-- SLIDE 10: Agent Handoffs -->
       <section>
         <h2>Agent Handoffs</h2>
-        <p class="subtitle">Clickable transitions between agents for guided workflows</p>
+        <p class="subtitle">Transitions between agents for guided workflows</p>
         <div class="two-col">
           <div>
-            <pre><code class="language-yaml">---
+            <pre style="max-height: 260px; overflow: auto; margin: 0;"><code class="language-yaml">---
 description: "Generate an implementation plan"
 tools: ["codebase", "fetch"]
 handoffs:
@@ -544,16 +572,6 @@ handoffs:
     prompt: "Review the plan for feasibility."
     send: false
 ---</code></pre>
-            <div class="card green-border" style="margin-top:14px;">
-              <h3>Handoff fields</h3>
-              <ul>
-                <li><code>label</code> &mdash; button text shown in chat</li>
-                <li><code>agent</code> &mdash; target agent to switch to</li>
-                <li><code>prompt</code> &mdash; pre-filled prompt for the next agent</li>
-                <li><code>send</code> &mdash; auto-submit? (<code>false</code> = user confirms first)</li>
-                <li><code>model</code> &mdash; optionally override the language model</li>
-              </ul>
-            </div>
           </div>
           <div>
             <div class="handoff-diagram">
@@ -578,20 +596,31 @@ handoffs:
                 <div class="handoff-msg">Documentation updated. Ready to ship! &#127881;</div>
               </div>
             </div>
-            <div class="card blue-border" style="margin-top:10px;">
-              <strong>How it works:</strong> After a chat response completes, <strong>handoff buttons</strong> appear as clickable
-              suggestions. The user clicks to switch to the next agent with context and a pre-filled prompt.
-              When <code>send: false</code>, the user reviews before submitting.
-            </div>
+          </div>
+        </div>
+        <div class="two-col" style="margin-top:12px;">
+          <div class="card green-border">
+            <h3>Handoff fields</h3>
+            <ul>
+              <li><code>label</code> &mdash; button text shown in chat</li>
+              <li><code>agent</code> &mdash; target agent to switch to</li>
+              <li><code>prompt</code> &mdash; pre-filled prompt for the next agent</li>
+              <li><code>send</code> &mdash; auto-submit? (<code>false</code> = user confirms first)</li>
+              <li><code>model</code> &mdash; optionally override the language model</li>
+            </ul>
+          </div>
+          <div class="card blue-border">
+            <h3>How it works</h3>
+            <p>After a chat response completes, <strong>handoff buttons</strong> appear as clickable
+            suggestions. The user clicks to switch to the next agent with context and a pre-filled prompt.
+            When <code>send: true</code>, the handoff is done automatically.</p>
           </div>
         </div>
       </section>
-
-      <!-- SLIDE: Subagents -->
       <section>
         <h2>Subagents</h2>
         <p class="subtitle">Agents can orchestrate other agents for isolated, specialized work</p>
-        <div class="two-col" style="align-items:start;">
+        <div class="two-col">
           <div>
             <table class="comparison-table">
               <thead>
@@ -669,7 +698,7 @@ running, writing, or debugging tests.
                 <li><strong>Resources:</strong> Accesses scripts/examples only as needed</li>
               </ol>
             </div>
-            <div class="card purple-border" style="margin-bottom:12px;">
+            <div class="card purple-border" style="flex:1;">
               <h3>&#128193; Locations</h3>
               <p><strong>Project:</strong> <code>.github/skills/</code><br>
               <strong>Personal:</strong> <code>~/.copilot/skills/</code><br>
@@ -685,8 +714,8 @@ running, writing, or debugging tests.
         <h2>Hooks</h2>
         <p class="subtitle">Automated actions triggered at key points in the agent lifecycle</p>
         <div class="two-col">
-          <div>
-            <pre><code class="language-json">{
+          <div style="display:flex; flex-direction:column;">
+            <pre style="margin:0; flex:1;"><code class="language-json">{
   "github.copilot.chat.hooks": {
     "postProcess": [
       {
@@ -696,32 +725,24 @@ running, writing, or debugging tests.
       {
         "command": "npm run format",
         "description": "Format changed files"
-      },
-      {
-        "command": "npm test -- --changed",
-        "description": "Run tests on changed files"
       }
     ]
   }
 }</code></pre>
           </div>
           <div>
-            <div class="card red-border" style="margin-bottom:12px;">
-              <h3>&#9889; What Are Hooks?</h3>
-              <p>Scripts that run <strong>automatically</strong> at key points in the agent lifecycle. Think of them as CI checks that run locally, in real time.</p>
-            </div>
-            <div class="card green-border" style="margin-bottom:12px;">
+            <div class="card green-border" style="margin-bottom:8px;">
               <h3>&#128161; Use Cases</h3>
-              <ul>
+              <ul style="margin:2px 0;">
                 <li>Auto-format code after every edit</li>
                 <li>Run linter and auto-fix issues</li>
                 <li>Execute tests on changed files</li>
                 <li>Validate builds haven&rsquo;t broken</li>
               </ul>
             </div>
-            <div class="card blue-border" style="margin-bottom:12px;">
+            <div class="card blue-border">
               <h3>&#128260; Lifecycle Events</h3>
-              <ul>
+              <ul style="margin:2px 0;">
                 <li><code>preProcess</code> &mdash; runs before agent processes a request</li>
                 <li><code>postProcess</code> &mdash; runs after agent edits files</li>
                 <li>Commands run sequentially; failures surfaced in chat</li>
@@ -729,52 +750,42 @@ running, writing, or debugging tests.
             </div>
           </div>
         </div>
-        <p class="tiny" style="margin-top:12px;">Also compatible with <strong>Claude Code hooks</strong> &mdash; define shared automation that works across AI coding tools.</p>
+        <p class="tiny" style="margin-top:24px;">Also compatible with <strong>Claude Code hooks!</strong></p>
       </section>
 
       <!-- SLIDE: MCP Servers -->
       <section>
         <h2>MCP Servers</h2>
         <p class="subtitle">Connect Copilot to external tools and data via the Model Context Protocol</p>
-        <div class="two-col">
-          <div>
-            <pre><code class="language-json">// .vscode/settings.json
+        <div class="two-col" style="align-items:stretch;">
+          <div style="display:flex;">
+            <pre style="margin:0; flex:1;"><code class="language-json">// .vscode/mcp.json
 {
-  "mcp": {
-    "servers": {
-      "my-db": {
-        "type": "stdio",
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-postgres",
-                 "postgresql://localhost/mydb"]
-      },
-      "github": {
-        "type": "stdio",
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-github"],
-        "env": { "GITHUB_TOKEN": "${input:ghToken}" }
-      }
+  "servers": {
+    "github/github-mcp-server": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "gallery": "https://api.mcp.github.com/v0/...",
+      "version": "0.13.0"
+    },
+    "microsoft/playwright-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"],
+      "gallery": "https://api.mcp.github.com/v0/...",
+      "version": "0.0.1-seed"
     }
   }
 }</code></pre>
           </div>
-          <div>
-            <div class="card mcp-border" style="margin-bottom:12px;">
-              <h3 style="color:var(--accent6);">&#128268; What Is MCP?</h3>
-              <p>An open protocol that lets AI assistants call external <strong>tools</strong>, read <strong>resources</strong>, and receive <strong>prompts</strong> from any server &mdash; databases, APIs, SaaS platforms, and more.</p>
+          <div style="display:flex; flex-direction:column;">
+            <div class="card mcp-border" style="margin-bottom:8px;">
+              <h3 style="color:var(--accent6); margin-bottom:2px;">&#128268; What Is MCP?</h3>
+              <p style="margin:0;">An open protocol letting AI assistants call external <strong>tools</strong>, read <strong>resources</strong>, and receive <strong>prompts</strong> from any server.</p>
             </div>
-            <div class="card blue-border" style="margin-bottom:12px;">
-              <h3>&#128736;&#65039; How It Works</h3>
-              <ul>
-                <li>Define servers in <code>.vscode/settings.json</code> or <code>.vscode/mcp.json</code></li>
-                <li>Copilot discovers available tools at startup</li>
-                <li>Agent mode calls tools as needed during tasks</li>
-                <li>Supports <code>stdio</code> and <code>sse</code> transports</li>
-              </ul>
-            </div>
-            <div class="card green-border">
-              <h3>&#128161; Common MCP Servers</h3>
-              <p style="line-height:1.8;"><strong>Postgres</strong> &bull; <strong>GitHub</strong> &bull; <strong>Playwright</strong> &bull; <strong>Filesystem</strong> &bull; <strong>Azure</strong> &bull; <strong>Custom APIs</strong></p>
+            <div class="card blue-border" style="flex:1;">
+              <h3 style="margin-bottom:2px;">&#128270; Finding MCP Servers</h3>
+              <p style="margin:0;">Search <code>@mcp</code> in the VS Code Extensions tab to discover and install servers from the marketplace.</p>
             </div>
           </div>
         </div>
@@ -784,27 +795,27 @@ running, writing, or debugging tests.
       <section>
         <h2>Putting It All Together</h2>
         <p class="subtitle">How the customization layers compose</p>
-        <div style="margin: 8px auto; max-width: 800px;">
-          <div style="display:flex; flex-direction:column; gap:3px; font-size:0.62em;">
-            <div style="background:rgba(121,184,255,0.1); border:1px solid var(--accent); border-radius:8px; padding:8px 14px;">
+        <div style="margin: 4px auto; max-width: 800px;">
+          <div style="display:flex; flex-direction:column; gap:2px; font-size:0.58em;">
+            <div style="background:rgba(121,184,255,0.1); border:1px solid var(--accent); border-radius:8px; padding:6px 14px;">
               <strong style="color:var(--accent);">Layer 1: Instructions</strong> (always active)<br>
               <code>copilot-instructions.md</code> + <code>AGENTS.md</code> + file-based <code>*.instructions.md</code><br>
               Sets the baseline: tech stack, conventions, code style
             </div>
-            <div style="text-align:center; color:#8b949e; font-size:0.9em;">&darr;</div>
-            <div style="background:rgba(78,205,196,0.1); border:1px solid var(--accent2); border-radius:8px; padding:8px 14px;">
+            <div style="text-align:center; color:#8b949e; font-size:0.85em; line-height:1;">&darr;</div>
+            <div style="background:rgba(78,205,196,0.1); border:1px solid var(--accent2); border-radius:8px; padding:6px 14px;">
               <strong style="color:var(--accent2);">Layer 2: Prompts &amp; Skills</strong> (on-demand)<br>
               <code>*.prompt.md</code> invoked via <code>/slash-command</code> &bull; <code>SKILL.md</code> loaded when task matches<br>
               Repeatable workflows and portable capabilities
             </div>
-            <div style="text-align:center; color:#8b949e; font-size:0.9em;">&darr;</div>
-            <div style="background:rgba(210,168,255,0.1); border:1px solid var(--accent3); border-radius:8px; padding:8px 14px;">
+            <div style="text-align:center; color:#8b949e; font-size:0.85em; line-height:1;">&darr;</div>
+            <div style="background:rgba(210,168,255,0.1); border:1px solid var(--accent3); border-radius:8px; padding:6px 14px;">
               <strong style="color:var(--accent3);">Layer 3: Agents</strong> (role-based)<br>
               Select from agents dropdown &mdash; each with its own instructions, tools, and handoffs<br>
               Specialized teammates that orchestrate subagents
             </div>
-            <div style="text-align:center; color:#8b949e; font-size:0.9em;">&darr;</div>
-            <div style="background:rgba(240,199,94,0.1); border:1px solid var(--accent4); border-radius:8px; padding:8px 14px;">
+            <div style="text-align:center; color:#8b949e; font-size:0.85em; line-height:1;">&darr;</div>
+            <div style="background:rgba(240,199,94,0.1); border:1px solid var(--accent4); border-radius:8px; padding:6px 14px;">
               <strong style="color:var(--accent4);">Layer 4: Hooks</strong> (automated checks)<br>
               <code>postProcess</code> runs linting, formatting, tests after every agent edit<br>
               Quality gates that catch issues in real time
@@ -818,18 +829,14 @@ running, writing, or debugging tests.
         <h2>Resources</h2>
         <div style="font-size:0.75em; text-align:left; max-width:700px; margin:16px auto;">
           <ul>
-            <li><strong>Customization Overview</strong> &mdash; code.visualstudio.com/docs/copilot/copilot-customization</li>
-            <li><strong>Custom Instructions</strong> &mdash; code.visualstudio.com/docs/copilot/customization/custom-instructions</li>
-            <li><strong>Custom Agents</strong> &mdash; code.visualstudio.com/docs/copilot/customization/custom-agents</li>
-            <li><strong>Prompt Files</strong> &mdash; code.visualstudio.com/docs/copilot/customization/prompt-files</li>
-            <li><strong>Agent Skills</strong> &mdash; code.visualstudio.com/docs/copilot/customization/agent-skills</li>
-            <li><strong>Community Examples</strong> &mdash; github.com/github/awesome-copilot</li>
+            <li><strong>Customization Overview</strong> &mdash; <a href="https://code.visualstudio.com/docs/copilot/copilot-customization" target="_blank">code.visualstudio.com/docs/copilot/copilot-customization</a></li>
+            <li><strong>Custom Instructions</strong> &mdash; <a href="https://code.visualstudio.com/docs/copilot/customization/custom-instructions" target="_blank">code.visualstudio.com/docs/copilot/customization/custom-instructions</a></li>
+            <li><strong>Custom Agents</strong> &mdash; <a href="https://code.visualstudio.com/docs/copilot/customization/custom-agents" target="_blank">code.visualstudio.com/docs/copilot/customization/custom-agents</a></li>
+            <li><strong>Prompt Files</strong> &mdash; <a href="https://code.visualstudio.com/docs/copilot/customization/prompt-files" target="_blank">code.visualstudio.com/docs/copilot/customization/prompt-files</a></li>
+            <li><strong>Agent Skills</strong> &mdash; <a href="https://code.visualstudio.com/docs/copilot/customization/agent-skills" target="_blank">code.visualstudio.com/docs/copilot/customization/agent-skills</a></li>
+            <li><strong>Community Examples</strong> &mdash; <a href="https://github.com/github/awesome-copilot" target="_blank">github.com/github/awesome-copilot</a></li>
           </ul>
         </div>
-        <br>
-        <div style="font-size:1.5em;">&#128075;</div>
-        <h3 style="color:var(--accent);">Thank You!</h3>
-        <p class="subtitle">Questions?</p>
       </section>
 
     </div>
@@ -847,6 +854,36 @@ running, writing, or debugging tests.
       width: 1280,
       height: 800,
       margin: 0.04,
+    });
+
+    // Show toggle buttons only on the first slide
+    function updateToggleVisibility() {
+      var isFirst = Reveal.getIndices().h === 0 && Reveal.getIndices().v === 0;
+      var display = isFirst ? 'block' : 'none';
+      document.querySelector('.theme-toggle').style.display = display;
+      document.querySelector('.fullscreen-toggle').style.display = display;
+    }
+    Reveal.on('slidechanged', updateToggleVisibility);
+    updateToggleVisibility();
+
+    // Fullscreen helpers
+    function startFullscreen() {
+      document.documentElement.requestFullscreen().catch(function() {});
+      dismissOverlay();
+    }
+    function dismissOverlay() {
+      document.getElementById('startOverlay').style.display = 'none';
+    }
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(function() {});
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    document.addEventListener('fullscreenchange', function() {
+      var btn = document.querySelector('.fullscreen-toggle');
+      btn.innerHTML = document.fullscreenElement ? '&#x2716;' : '&#x26F6;';
     });
 
     function toggleTheme() {

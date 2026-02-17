@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copilot Customizations in VS Code</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link id="reveal-theme" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+  <link id="highlight-theme" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+  <style>
+    :root {
+      --accent: #79b8ff;
+      --accent2: #4ecdc4;
+      --accent3: #d2a8ff;
+      --accent4: #f0c75e;
+      --accent5: #f778ba;
+      --accent6: #e0823d;
+      --bg-card: rgba(255,255,255,0.05);
+    }
+    .reveal .slides { overflow: visible !important; }
+    .reveal .slides section { overflow: visible !important; }
+    .reveal { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+    .reveal h1, .reveal h2, .reveal h3 { color: var(--accent); font-weight: 700; }
+    .reveal h1 { font-size: 2.4em; }
+    .reveal h2 { font-size: 1.7em; margin-bottom: 6px; }
+    .reveal h3 { font-size: 1.2em; color: var(--accent2); margin-bottom: 8px; }
+    .reveal .subtitle { color: #8b949e; font-size: 0.95em; margin-top: 0.3em; }
+    .reveal .highlight { color: var(--accent2); font-weight: bold; }
+    .reveal .highlight-purple { color: var(--accent3); font-weight: bold; }
+    .reveal .highlight-orange { color: var(--accent4); font-weight: bold; }
+
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .card-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 0.65em;
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+    .card code {
+      word-break: break-all;
+    }
+    .card h3 { margin-top: 0; font-size: 1.05em; }
+    .card code { font-size: 0.85em; }
+    .card.blue-border { border-left: 4px solid var(--accent); }
+    .card.green-border { border-left: 4px solid var(--accent2); }
+    .card.purple-border { border-left: 4px solid var(--accent3); }
+    .card.orange-border { border-left: 4px solid var(--accent4); }
+    .card.red-border { border-left: 4px solid var(--accent5); }
+    .card.mcp-border { border-left: 4px solid var(--accent6); }
+
+    .file-tree {
+      background: #161b22;
+      border-radius: 8px;
+      padding: 14px 20px;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.6em;
+      text-align: left;
+      line-height: 1.7;
+      display: inline-block;
+    }
+    .file-tree .folder { color: var(--accent); }
+    .file-tree .file { color: #c9d1d9; }
+    .file-tree .comment { color: #8b949e; font-style: italic; }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.6em;
+      margin-top: 10px;
+    }
+    .comparison-table th {
+      background: rgba(121,184,255,0.15);
+      color: var(--accent);
+      padding: 7px 10px;
+      text-align: left;
+      border-bottom: 2px solid var(--accent);
+    }
+    .comparison-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      vertical-align: top;
+    }
+    .comparison-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+    .demo-step {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin: 6px 0;
+      text-align: left;
+      font-size: 0.65em;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .demo-step .step-num {
+      background: var(--accent);
+      color: #0d1117;
+      border-radius: 50%;
+      min-width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1em;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: 600;
+      margin: 2px 4px;
+    }
+    .badge-blue { background: rgba(121,184,255,0.2); color: var(--accent); }
+    .badge-teal { background: rgba(78,205,196,0.2); color: var(--accent2); }
+    .badge-purple { background: rgba(210,168,255,0.2); color: var(--accent3); }
+    .badge-gold { background: rgba(240,199,94,0.2); color: var(--accent4); }
+    .badge-pink { background: rgba(247,120,186,0.2); color: var(--accent5); }
+    .badge-mcp { background: rgba(224,130,61,0.2); color: var(--accent6); }
+
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin: 14px 0;
+      font-size: 0.66em;
+    }
+    .flow-box {
+      background: var(--bg-card);
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-weight: 600;
+    }
+    .flow-box.green { border-color: var(--accent2); color: var(--accent2); }
+    .flow-box.purple { border-color: var(--accent3); color: var(--accent3); }
+    .flow-box.orange { border-color: var(--accent4); color: var(--accent4); }
+    .flow-arrow { color: #8b949e; font-size: 1.5em; }
+
+    .reveal pre { width: 100%; margin: 4px 0; }
+    .reveal pre code {
+      font-size: 0.75em;
+      line-height: 1.4;
+      max-height: 420px;
+      border-radius: 8px;
+      padding: 12px !important;
+    }
+    .reveal ul { font-size: 0.85em; }
+    .reveal li { margin: 4px 0; }
+
+    .title-logo {
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+
+    .small { font-size: 0.82em; }
+    .tiny { font-size: 0.65em; color: #8b949e; }
+
+    .handoff-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 10px auto;
+      max-width: 700px;
+    }
+    .handoff-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.6em;
+    }
+    .handoff-agent {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-weight: 600;
+      min-width: 100px;
+      text-align: center;
+    }
+    .handoff-msg {
+      background: rgba(78,205,196,0.08);
+      border-radius: 8px;
+      padding: 6px 10px;
+      color: #c9d1d9;
+      flex: 1;
+    }
+    .handoff-btn {
+      display: inline-block;
+      background: rgba(121,184,255,0.15);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 0.9em;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Light mode overrides */
+    body.light-mode {
+      --accent: #0550ae;
+      --accent2: #1a7f76;
+      --accent3: #7c3aed;
+      --accent4: #9a6700;
+      --accent5: #bf3989;
+      --accent6: #bc4c00;
+      --bg-card: rgba(0,0,0,0.04);
+    }
+    body.light-mode, body.light-mode .reveal, body.light-mode .reveal .slide-background,
+    body.light-mode .reveal .slide-background-content,
+    body.light-mode .reveal .backgrounds { background: #fff !important; }
+    body.light-mode .reveal { color: #1f2328; }
+    body.light-mode .reveal .subtitle { color: #656d76; }
+    body.light-mode .reveal .tiny { color: #656d76; }
+    body.light-mode .card { border-color: rgba(0,0,0,0.15); }
+    body.light-mode .file-tree { background: #f6f8fa; }
+    body.light-mode .file-tree .file { color: #1f2328; }
+    body.light-mode .file-tree .comment { color: #656d76; }
+    body.light-mode .comparison-table th { background: rgba(5,80,174,0.1); }
+    body.light-mode .comparison-table td { border-bottom-color: rgba(0,0,0,0.08); }
+    body.light-mode .comparison-table tr:hover td { background: rgba(0,0,0,0.03); }
+    body.light-mode .flow-arrow { color: #656d76; }
+    body.light-mode .handoff-msg { background: rgba(26,127,118,0.06); color: #1f2328; }
+    body.light-mode .badge-blue { background: rgba(5,80,174,0.1); }
+    body.light-mode .badge-teal { background: rgba(26,127,118,0.1); }
+    body.light-mode .badge-purple { background: rgba(124,58,237,0.1); }
+    body.light-mode .badge-gold { background: rgba(154,103,0,0.1); }
+    body.light-mode .badge-pink { background: rgba(191,57,137,0.1); }
+    body.light-mode .badge-mcp { background: rgba(188,76,0,0.1); }
+    body.light-mode .demo-step .step-num { color: #fff; }
+
+    /* Theme toggle button */
+    .theme-toggle {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 100;
+      background: rgba(128,128,128,0.25);
+      border: 1px solid rgba(128,128,128,0.4);
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      transition: background 0.2s;
+    }
+    .theme-toggle:hover { background: rgba(128,128,128,0.45); }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">&#9728;&#65039;</button>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- SLIDE 1: Title -->
+      <section>
+        <div style="margin-bottom: 10px;">
+          <img src="vscode-logo.svg" alt="VS Code Logo" width="100" height="100">
+        </div>
+        <h1>Customizations for Your Team, Tools, and Techniques</h1>
+        <br>
+        <p class="small" style="color:#8b949e; font-style: italic;">Vibe coded with GitHub Copilot in VS Code</p>
+      </section>
+
+      <!-- SLIDE 3: The Customization Spectrum -->
+      <section>
+        <div class="card-grid" style="font-size:1em; grid-template-columns: 1fr 1fr 1fr; gap:16px;">
+          <div class="card blue-border" style="padding:18px 20px;">
+            <strong style="color:var(--accent)">Instructions</strong><br>
+            "Follow our coding standards"<br>
+            <span class="tiny">Always-on codebase guardrails or  area specific rules</span>
+          </div>
+          <div class="card green-border" style="padding:18px 20px;">
+            <strong style="color:var(--accent2)">Prompts</strong><br>
+            "Run this prompt template on demand"<br>
+            <span class="tiny">On-demand &mdash; invoked via <code>/slash-command</code></span>
+          </div>
+          <div class="card purple-border" style="padding:18px 20px;">
+            <strong style="color:var(--accent3)">Custom Agents</strong><br>
+            "Select a specialist from the dropdown"<br>
+            <span class="tiny">Interactive &mdash; role-based personas with tooling</span>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:center; gap:16px; margin-top:16px; font-size:1em;">
+          <div class="card red-border" style="flex:0 1 33%; padding:18px 20px;">
+            <strong style="color:var(--accent5)">Skills</strong> <span class="badge badge-pink">New</span><br>
+            "Portable capabilities loaded by task"<br>
+            <span class="tiny">Auto-matched &mdash; reusable capabilities</span>
+          </div>
+          <div class="card orange-border" style="flex:0 1 33%; padding:18px 20px;">
+            <strong style="color:var(--accent4)">Hooks</strong> <span class="badge badge-gold">New</span><br>
+            "Auto-run checks after agent edits"<br>
+            <span class="tiny">Automated &mdash; lint, format, test on every change</span>
+          </div>
+          <div class="card mcp-border" style="flex:0 1 33%; padding:18px 20px;">
+            <strong style="color:var(--accent6)">MCP Servers</strong><br>
+            "Connect external tools and data sources"<br>
+            <span class="tiny">Extensible &mdash; databases, APIs, and custom tooling</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: Comparison Table -->
+      <section>
+        <h2>Customization Files at a Glance</h2>
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Purpose</th>
+              <th>Scope</th>
+              <th>Activation</th>
+              <th>Tools?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>copilot-instructions.md</code></td>
+              <td>Global coding standards &amp; context</td>
+              <td>Entire workspace</td>
+              <td>Automatic &mdash; always included in chat</td>
+              <td>No</td>
+            </tr>
+            <tr>
+              <td><code>*.instructions.md</code></td>
+              <td>File-type or folder-scoped rules</td>
+              <td>Matching files via <code>applyTo</code> glob</td>
+              <td>Automatic &mdash; when files match pattern</td>
+              <td>No</td>
+            </tr>
+            <tr>
+              <td><code>*.prompt.md</code></td>
+              <td>Reusable prompt templates</td>
+              <td>User-defined</td>
+              <td>On-demand &mdash; type <code>/prompt-name</code> in chat</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td><code>*.agent.md</code></td>
+              <td>Role-based AI personas</td>
+              <td>Agents dropdown</td>
+              <td>On-demand &mdash; select from agents dropdown</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td><code>skills/*/SKILL.md</code></td>
+              <td>Portable capabilities &amp; workflows</td>
+              <td>On-demand per task</td>
+              <td>Automatic &mdash; loaded when task matches description</td>
+              <td>Scripts</td>
+            </tr>
+            <tr>
+              <td><code>Hooks</code> in <code>.vscode/settings.json</code></td>
+              <td>Automated lifecycle actions (lint, test, format)</td>
+              <td>Workspace</td>
+              <td>Automatic &mdash; runs after agent edits files</td>
+              <td>Commands</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="tiny" style="margin-top:12px;">
+          <strong>Instructions vs. skills:</strong> Use instructions for documenting how to work with code and skills for capabilities the agent can acquire.
+        </p>
+      </section>
+
+      <!-- SLIDE 6: Custom Instructions -->
+      <section>
+        <h2>Custom Instructions</h2>
+        <p class="subtitle">Always-on context &mdash; global or scoped to specific files</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start;">
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div class="card blue-border" style="padding:10px 14px;">
+              <h3 style="margin-bottom:4px;">&#128218; Global Instructions</h3>
+              <p style="margin:0;"><code>copilot-instructions.md</code> &mdash; injected into <strong>every</strong> chat request.</p>
+              <ul style="margin:4px 0;">
+                <li>Tech stack, conventions, architecture decisions</li>
+                <li>Applied to chat and agent mode (not inline completions)</li>
+                <li>Keep it focused &mdash; too much noise reduces quality</li>
+              </ul>
+            </div>
+            <pre style="margin:0;"><code class="language-markdown" style="font-size:0.7em;">---
+applyTo: "src/components/**/*.tsx"
+---
+# React Component Guidelines
+- Use functional components only
+- Props interface named `{Component}Props`
+- Wrap async data in Suspense
+
+# Accessibility
+- All interactive elements need aria labels
+- Use semantic HTML elements</code></pre>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px; font-size:0.9em;">
+            <div class="card purple-border" style="padding:8px 12px;">
+              <h3 style="margin-bottom:4px;">&#127919; File-Scoped via <code>applyTo</code></h3>
+              <p style="margin:0;">Glob patterns match files relative to workspace root:</p>
+              <ul style="margin:4px 0;">
+                <li><code>**/*.test.ts</code> &mdash; all test files</li>
+                <li><code>src/api/**</code> &mdash; entire API layer</li>
+              </ul>
+              <p style="margin:0;">No <code>applyTo</code> = <strong>not auto-applied</strong> (can still add manually).</p>
+            </div>
+            <div class="card orange-border" style="padding:8px 12px;">
+              <h3 style="margin-bottom:4px;">&#128736;&#65039; When to Use Scoped Instructions</h3>
+              <ul style="margin:2px 0;">
+                <li>Different rules for frontend vs. backend</li>
+                <li>Language-specific conventions in a monorepo</li>
+                <li>Framework-specific patterns (React, Django, etc.)</li>
+              </ul>
+            </div>
+            <div class="card green-border" style="padding:8px 12px;">
+              <h3 style="margin-bottom:4px;">&#9989; Best Practices</h3>
+              <ul style="margin:2px 0;">
+                <li>Be specific: <em>"use Vitest"</em> not <em>"use a testing framework"</em></li>
+                <li>Include reasoning: <em>"Use date-fns &mdash; moment.js is deprecated"</em></li>
+                <li>Show code examples over abstract rules</li>
+                <li>Skip rules that linters/formatters already enforce</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: Reusable Prompts -->
+      <section>
+        <h2>Prompt</h2>
+        <p class="subtitle">One shot workflows invoked by the user via <code>/slash-commands</code></p>
+        <div class="two-col">
+          <div>
+            <pre><code class="language-markdown">---
+mode: "agent"
+tools: ["codebase", "github", "fetch"]
+description: "Scaffold a new feature with tests"
+---
+
+# New Feature Scaffold
+
+Break down the requested feature into:
+
+1. **Data model** changes needed
+2. **API endpoints** to create/modify
+3. **UI components** to build
+4. **Tests** to write
+
+Follow the project conventions in our
+copilot-instructions.md.</code></pre>
+          </div>
+          <div>
+            <div class="card green-border" style="margin-bottom:12px;">
+              <h3>&#128640; Front Matter</h3>
+              <ul>
+                <li><code>mode</code>: <code>ask</code>, <code>agent</code>, or <code>edit</code></li>
+                <li><code>tools</code>: which tools the prompt can use</li>
+                <li><code>description</code>: shown in the prompt picker</li>
+                <li><code>model</code>: override the language model</li>
+              </ul>
+            </div>
+            <div class="card blue-border" style="margin-bottom:12px;">
+              <h3>&#128172; How to Invoke</h3>
+              <p>Type <code>/</code> in chat to see available prompts, then add your own context after the command.</p>
+            </div>
+            <div class="card purple-border">
+              <h3>&#128196; Variables</h3>
+              <p><code>${selection}</code> &bull; <code>${file}</code> &bull; <code>${input:name}</code></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 9: Custom Agents -->
+      <section>
+        <h2>Custom Agents</h2>
+        <p class="subtitle">Role-based AI personas selected from the agents dropdown</p>
+        <div class="two-col">
+          <div>
+            <pre><code class="language-markdown">---
+description: "Senior code reviewer"
+tools: ["codebase", "githubRepo"]
+handoffs:
+  - label: "Update docs"
+    agent: docs-writer
+    prompt: "Document the reviewed code"
+    send: false
+---
+
+# Code Reviewer Agent
+
+You are a senior engineer doing code review.
+
+## Review Checklist
+- Type safety and error handling
+- Security vulnerabilities (OWASP Top 10)
+- Performance implications
+- Test coverage adequacy</code></pre>
+          </div>
+          <div>
+            <div class="card purple-border" style="margin-bottom:12px;">
+              <h3>&#128101; Agent = Persona + Tools + Handoffs</h3>
+              <ul>
+                <li><strong>Instructions</strong> define personality and expertise</li>
+                <li><strong>Tools</strong> control what the agent can access</li>
+                <li><strong>Handoffs</strong> create clickable buttons to transition</li>
+                <li>Can be invoked as <strong>subagents</strong> by other agents</li>
+                <li>File name becomes the agent identifier</li>
+              </ul>
+            </div>
+            <div class="card orange-border" style="margin-bottom:12px;">
+              <h3>&#128161; Agent Ideas</h3>
+              <p style="line-height:1.8;"><strong>reviewer</strong> &bull; <strong>architect</strong> &bull; <strong>docs-writer</strong> &bull; <strong>planner</strong> &bull; <strong>security</strong></p>
+            </div>
+            <div class="card blue-border">
+              <h3>&#128260; How to Use</h3>
+              <p>Select from the <strong>agents dropdown</strong> in Chat. The agent's instructions, tools, and handoffs apply to your conversation.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 10: Agent Handoffs -->
+      <section>
+        <h2>Agent Handoffs</h2>
+        <p class="subtitle">Clickable transitions between agents for guided workflows</p>
+        <div class="two-col">
+          <div>
+            <pre><code class="language-yaml">---
+description: "Generate an implementation plan"
+tools: ["codebase", "fetch"]
+handoffs:
+  - label: "Start Implementation"
+    agent: implementer
+    prompt: "Implement the plan outlined above."
+    send: false
+  - label: "Request Review"
+    agent: reviewer
+    prompt: "Review the plan for feasibility."
+    send: false
+---</code></pre>
+            <div class="card green-border" style="margin-top:14px;">
+              <h3>Handoff fields</h3>
+              <ul>
+                <li><code>label</code> &mdash; button text shown in chat</li>
+                <li><code>agent</code> &mdash; target agent to switch to</li>
+                <li><code>prompt</code> &mdash; pre-filled prompt for the next agent</li>
+                <li><code>send</code> &mdash; auto-submit? (<code>false</code> = user confirms first)</li>
+                <li><code>model</code> &mdash; optionally override the language model</li>
+              </ul>
+            </div>
+          </div>
+          <div>
+            <div class="handoff-diagram">
+              <div class="handoff-row">
+                <div class="handoff-agent" style="border:2px solid var(--accent); color:var(--accent);">planner</div>
+                <div class="flow-arrow">&rarr;</div>
+                <div class="handoff-msg">Plan complete. <span class="handoff-btn">Start Implementation</span></div>
+              </div>
+              <div class="handoff-row">
+                <div class="handoff-agent" style="border:2px solid var(--accent2); color:var(--accent2);">implementer</div>
+                <div class="flow-arrow">&rarr;</div>
+                <div class="handoff-msg">Code ready. <span class="handoff-btn">Request Review</span></div>
+              </div>
+              <div class="handoff-row">
+                <div class="handoff-agent" style="border:2px solid var(--accent3); color:var(--accent3);">reviewer</div>
+                <div class="flow-arrow">&rarr;</div>
+                <div class="handoff-msg">LGTM! <span class="handoff-btn">Update Docs</span></div>
+              </div>
+              <div class="handoff-row">
+                <div class="handoff-agent" style="border:2px solid var(--accent4); color:var(--accent4);">docs-writer</div>
+                <div class="flow-arrow">&rarr;</div>
+                <div class="handoff-msg">Documentation updated. Ready to ship! &#127881;</div>
+              </div>
+            </div>
+            <div class="card blue-border" style="margin-top:10px;">
+              <strong>How it works:</strong> After a chat response completes, <strong>handoff buttons</strong> appear as clickable
+              suggestions. The user clicks to switch to the next agent with context and a pre-filled prompt.
+              When <code>send: false</code>, the user reviews before submitting.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE: Subagents -->
+      <section>
+        <h2>Subagents</h2>
+        <p class="subtitle">Agents can orchestrate other agents for isolated, specialized work</p>
+        <div class="two-col" style="align-items:start;">
+          <div>
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  <th>Mode</th>
+                  <th>How Used</th>
+                  <th>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Top-level</strong></td>
+                  <td>User switches to agent</td>
+                  <td>Plan agent, Migration agent</td>
+                </tr>
+                <tr>
+                  <td><strong>Subagent</strong></td>
+                  <td>Orchestrator invokes</td>
+                  <td>Log analysis, code research, documentation</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <div class="card purple-border" style="margin-bottom:12px;">
+              <h3>&#128260; When Invoked as Subagent</h3>
+              <ul>
+                <li>Runs in its <strong>own context window</strong></li>
+                <li>Receives an input prompt from the orchestrator</li>
+                <li>Returns just the response</li>
+                <li>Main agent's context stays clean</li>
+              </ul>
+            </div>
+            <div class="card blue-border">
+              <h3>&#128161; Why Use Subagents?</h3>
+              <p>Break complex tasks into focused subtasks. Each subagent works in isolation, keeping the orchestrator's context uncluttered and enabling parallel specialization.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 11: Agent Skills -->
+      <section>
+        <h2>Agent Skills</h2>
+        <p class="subtitle">Portable capabilities with instructions, scripts, and resources</p>
+        <div class="two-col">
+          <div>
+            <pre><code class="language-markdown">---
+name: webapp-testing
+description: "Run and debug web application
+tests using Playwright and Vitest"
+---
+
+# Web App Testing Skill
+
+## When to use
+Use this skill when the user asks about
+running, writing, or debugging tests.
+
+## Steps
+1. Identify the test framework in use
+2. Run the relevant test suite
+3. Parse failures and suggest fixes
+
+## Resources
+- [Test template](./test-template.js)
+- [Example scenarios](./examples/)</code></pre>
+          </div>
+          <div>
+            <div class="card green-border" style="margin-bottom:12px;">
+              <h3>&#128161; Progressive Loading</h3>
+              <ol>
+                <li><strong>Discovery:</strong> Copilot reads <code>name</code> + <code>description</code></li>
+                <li><strong>Loading:</strong> If the task matches, loads <code>SKILL.md</code> body</li>
+                <li><strong>Resources:</strong> Accesses scripts/examples only as needed</li>
+              </ol>
+            </div>
+            <div class="card purple-border" style="margin-bottom:12px;">
+              <h3>&#128193; Locations</h3>
+              <p><strong>Project:</strong> <code>.github/skills/</code><br>
+              <strong>Personal:</strong> <code>~/.copilot/skills/</code><br>
+              Configurable via <code>chat.agentSkillsLocations</code></p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE: Copilot Hooks -->
+      <section>
+        <h2>Hooks</h2>
+        <p class="subtitle">Automated actions triggered at key points in the agent lifecycle</p>
+        <div class="two-col">
+          <div>
+            <pre><code class="language-json">{
+  "github.copilot.chat.hooks": {
+    "postProcess": [
+      {
+        "command": "npm run lint:fix",
+        "description": "Auto-fix lint issues"
+      },
+      {
+        "command": "npm run format",
+        "description": "Format changed files"
+      },
+      {
+        "command": "npm test -- --changed",
+        "description": "Run tests on changed files"
+      }
+    ]
+  }
+}</code></pre>
+          </div>
+          <div>
+            <div class="card red-border" style="margin-bottom:12px;">
+              <h3>&#9889; What Are Hooks?</h3>
+              <p>Scripts that run <strong>automatically</strong> at key points in the agent lifecycle. Think of them as CI checks that run locally, in real time.</p>
+            </div>
+            <div class="card green-border" style="margin-bottom:12px;">
+              <h3>&#128161; Use Cases</h3>
+              <ul>
+                <li>Auto-format code after every edit</li>
+                <li>Run linter and auto-fix issues</li>
+                <li>Execute tests on changed files</li>
+                <li>Validate builds haven&rsquo;t broken</li>
+              </ul>
+            </div>
+            <div class="card blue-border" style="margin-bottom:12px;">
+              <h3>&#128260; Lifecycle Events</h3>
+              <ul>
+                <li><code>preProcess</code> &mdash; runs before agent processes a request</li>
+                <li><code>postProcess</code> &mdash; runs after agent edits files</li>
+                <li>Commands run sequentially; failures surfaced in chat</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <p class="tiny" style="margin-top:12px;">Also compatible with <strong>Claude Code hooks</strong> &mdash; define shared automation that works across AI coding tools.</p>
+      </section>
+
+      <!-- SLIDE: MCP Servers -->
+      <section>
+        <h2>MCP Servers</h2>
+        <p class="subtitle">Connect Copilot to external tools and data via the Model Context Protocol</p>
+        <div class="two-col">
+          <div>
+            <pre><code class="language-json">// .vscode/settings.json
+{
+  "mcp": {
+    "servers": {
+      "my-db": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-postgres",
+                 "postgresql://localhost/mydb"]
+      },
+      "github": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-github"],
+        "env": { "GITHUB_TOKEN": "${input:ghToken}" }
+      }
+    }
+  }
+}</code></pre>
+          </div>
+          <div>
+            <div class="card mcp-border" style="margin-bottom:12px;">
+              <h3 style="color:var(--accent6);">&#128268; What Is MCP?</h3>
+              <p>An open protocol that lets AI assistants call external <strong>tools</strong>, read <strong>resources</strong>, and receive <strong>prompts</strong> from any server &mdash; databases, APIs, SaaS platforms, and more.</p>
+            </div>
+            <div class="card blue-border" style="margin-bottom:12px;">
+              <h3>&#128736;&#65039; How It Works</h3>
+              <ul>
+                <li>Define servers in <code>.vscode/settings.json</code> or <code>.vscode/mcp.json</code></li>
+                <li>Copilot discovers available tools at startup</li>
+                <li>Agent mode calls tools as needed during tasks</li>
+                <li>Supports <code>stdio</code> and <code>sse</code> transports</li>
+              </ul>
+            </div>
+            <div class="card green-border">
+              <h3>&#128161; Common MCP Servers</h3>
+              <p style="line-height:1.8;"><strong>Postgres</strong> &bull; <strong>GitHub</strong> &bull; <strong>Playwright</strong> &bull; <strong>Filesystem</strong> &bull; <strong>Azure</strong> &bull; <strong>Custom APIs</strong></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE: Putting It All Together -->
+      <section>
+        <h2>Putting It All Together</h2>
+        <p class="subtitle">How the customization layers compose</p>
+        <div style="margin: 8px auto; max-width: 800px;">
+          <div style="display:flex; flex-direction:column; gap:3px; font-size:0.62em;">
+            <div style="background:rgba(121,184,255,0.1); border:1px solid var(--accent); border-radius:8px; padding:8px 14px;">
+              <strong style="color:var(--accent);">Layer 1: Instructions</strong> (always active)<br>
+              <code>copilot-instructions.md</code> + <code>AGENTS.md</code> + file-based <code>*.instructions.md</code><br>
+              Sets the baseline: tech stack, conventions, code style
+            </div>
+            <div style="text-align:center; color:#8b949e; font-size:0.9em;">&darr;</div>
+            <div style="background:rgba(78,205,196,0.1); border:1px solid var(--accent2); border-radius:8px; padding:8px 14px;">
+              <strong style="color:var(--accent2);">Layer 2: Prompts &amp; Skills</strong> (on-demand)<br>
+              <code>*.prompt.md</code> invoked via <code>/slash-command</code> &bull; <code>SKILL.md</code> loaded when task matches<br>
+              Repeatable workflows and portable capabilities
+            </div>
+            <div style="text-align:center; color:#8b949e; font-size:0.9em;">&darr;</div>
+            <div style="background:rgba(210,168,255,0.1); border:1px solid var(--accent3); border-radius:8px; padding:8px 14px;">
+              <strong style="color:var(--accent3);">Layer 3: Agents</strong> (role-based)<br>
+              Select from agents dropdown &mdash; each with its own instructions, tools, and handoffs<br>
+              Specialized teammates that orchestrate subagents
+            </div>
+            <div style="text-align:center; color:#8b949e; font-size:0.9em;">&darr;</div>
+            <div style="background:rgba(240,199,94,0.1); border:1px solid var(--accent4); border-radius:8px; padding:8px 14px;">
+              <strong style="color:var(--accent4);">Layer 4: Hooks</strong> (automated checks)<br>
+              <code>postProcess</code> runs linting, formatting, tests after every agent edit<br>
+              Quality gates that catch issues in real time
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 20: Resources -->
+      <section>
+        <h2>Resources</h2>
+        <div style="font-size:0.75em; text-align:left; max-width:700px; margin:16px auto;">
+          <ul>
+            <li><strong>Customization Overview</strong> &mdash; code.visualstudio.com/docs/copilot/copilot-customization</li>
+            <li><strong>Custom Instructions</strong> &mdash; code.visualstudio.com/docs/copilot/customization/custom-instructions</li>
+            <li><strong>Custom Agents</strong> &mdash; code.visualstudio.com/docs/copilot/customization/custom-agents</li>
+            <li><strong>Prompt Files</strong> &mdash; code.visualstudio.com/docs/copilot/customization/prompt-files</li>
+            <li><strong>Agent Skills</strong> &mdash; code.visualstudio.com/docs/copilot/customization/agent-skills</li>
+            <li><strong>Community Examples</strong> &mdash; github.com/github/awesome-copilot</li>
+          </ul>
+        </div>
+        <br>
+        <div style="font-size:1.5em;">&#128075;</div>
+        <h3 style="color:var(--accent);">Thank You!</h3>
+        <p class="subtitle">Questions?</p>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      transition: 'slide',
+      plugins: [RevealHighlight, RevealNotes],
+      width: 1280,
+      height: 800,
+      margin: 0.04,
+    });
+
+    function toggleTheme() {
+      const body = document.body;
+      const themeLink = document.getElementById('reveal-theme');
+      const hlLink = document.getElementById('highlight-theme');
+      const btn = document.querySelector('.theme-toggle');
+      body.classList.toggle('light-mode');
+      const isLight = body.classList.contains('light-mode');
+      themeLink.href = isLight
+        ? 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css'
+        : 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css';
+      hlLink.href = isLight
+        ? 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/github.css'
+        : 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css';
+      btn.innerHTML = isLight ? '&#127769;' : '&#9728;&#65039;';
+    }
+  </script>
+</body>
+</html>
